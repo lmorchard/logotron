@@ -17,10 +17,7 @@ RUN autoreconf --install \
     && make install
 
 RUN apt-get install -y \
-    x11-apps imagemagick
-
-RUN apt-get install -y \
-    xdotool
+    x11-apps imagemagick ghostscript xdotool bc
 
 COPY entrypoint.sh /logo/
 
