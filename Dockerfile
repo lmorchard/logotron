@@ -16,8 +16,14 @@ RUN autoreconf --install \
     && make \
     && make install
 
+RUN apt-get install -y \
+    x11-apps imagemagick
+
+RUN apt-get install -y \
+    xdotool
+
 COPY entrypoint.sh /logo/
 
-RUN ls -la /logo
+VOLUME [ "/input", "/output" ]
 
 ENTRYPOINT [ "/logo/entrypoint.sh" ]
