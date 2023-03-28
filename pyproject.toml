@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "logotron"
+version = "0.1.0"
+description = ""
+authors = ["Les Orchard <me@lmorchard.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+mastodon-py = "^1.8.0"
+python-dotenv = "^1.0.0"
+isodate = "^0.6.1"
+
+[tool.poetry.dev-dependencies]
+autopep8 = "^1.5.6"
+isort = "^5.8.0"
+pylint = "^2.8.2"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
