@@ -5,6 +5,7 @@ import datetime
 import os
 
 import mastodon
+import mastodon.streaming
 
 from logotron.config import config
 
@@ -27,11 +28,29 @@ def main():
         client_id=config.client_key,
         client_secret=config.client_secret,
         access_token=config.access_token,
-        debug_requests=config.debug,
+        debug_requests=False #config.debug,
     )
 
     client.status_post(
-        status=f"hello there, it is {datetime.datetime.now().isoformat()}")
+        status=f"hello there, I have awoken at {datetime.datetime.now().isoformat()}")
+
+    listener = LogotronStreamListener(logger=LOGGER)
+    client.stream_user(listener=listener)
+
+
+class LogotronStreamListener(mastodon.streaming.StreamListener):
+    def __init__(self, logger):
+        self.logger = logger
+
+    def on_notification(self, notification):
+
+        status = notification["status"]
+        content = status["content"]
+        
+        account = notification["account"]
+        acct = account["acct"]
+
+        self.logger.info(f"NOTIFICATION {acct} {content}")
 
 
 if __name__ == '__main__':
