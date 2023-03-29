@@ -1,7 +1,6 @@
 .env
 *.log
 __pycache__
-input
 output
 tmp
 data

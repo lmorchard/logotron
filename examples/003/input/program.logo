@@ -1,0 +1,14 @@
+to randomwalk
+  repeat 100 [
+    setpencolor (random 1 15)
+    make "r random 3
+    if :r = 0 [ fd 20 ]
+    if :r = 1 [ rt 90 fd 20 ]
+    if :r = 2 [ lt 90 fd 20 ]
+  ]
+end
+
+randomwalk
+
+wait 120
+bye

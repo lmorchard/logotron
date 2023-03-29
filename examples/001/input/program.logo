@@ -1,0 +1,14 @@
+repeat 8 [
+  setpencolor (random 1 15)
+  rt 45 repeat 6 [
+    repeat 90 [
+      fd 2 rt 2
+    ]
+    rt 90
+    wait 1
+  ]
+  wait 1
+]
+
+wait 120
+bye
