@@ -10,6 +10,7 @@ class Config:
     client_key: str = ""
     client_secret: str = ""
     access_token: str = ""
+    debug_requests: bool = False
     debug: bool = False
 
     def __init__(self, raw_config={}):
