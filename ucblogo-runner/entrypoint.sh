@@ -8,7 +8,7 @@ export DISPLAY=:42
 
 echo "Listing /input"
 ls -al /input
-cat /input/program
+cat /input/program.logo
 
 echo "Cleaning /output"
 rm -rf /output/*
@@ -81,7 +81,7 @@ done
 echo " started!"
 
 echo -n "Loading input program..."
-xdotool type --window $WID_LOGO 'load "/input/program' 2>/dev/null
+xdotool type --window $WID_LOGO 'load "/input/program.logo' 2>/dev/null
 xdotool key --window $WID_LOGO Return 2>/dev/null
 echo " done!"
 

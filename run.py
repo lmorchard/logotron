@@ -20,7 +20,8 @@ LOGGER = logging.getLogger(__name__)
 def main():
     base_paths = [
         "/home/lmorchard/workspace/logotron/data/001",
-        "/home/lmorchard/workspace/logotron/data/002"
+        "/home/lmorchard/workspace/logotron/data/002",
+        "/home/lmorchard/workspace/logotron/data/003",
     ]
     for base_path in base_paths:
         runner = LogoRunner(base_path=base_path, config=config, logger=LOGGER)
