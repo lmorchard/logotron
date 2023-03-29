@@ -12,6 +12,8 @@ class Config:
     access_token: str = ""
     debug_requests: bool = False
     debug: bool = False
+    logo_runner_image: str = "lmorchard/ucblogo-runner"
+    logo_runner_mem_limit: str = "512m"
 
     def __init__(self, raw_config={}):
         for field in fields(Config):

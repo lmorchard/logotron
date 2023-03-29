@@ -6,6 +6,13 @@ TRIM_DURATION=1.5
 
 export DISPLAY=:42
 
+echo "Listing /input"
+ls -al /input
+cat /input/program
+
+echo "Cleaning /output"
+rm -rf /output/*
+
 echo -n "Starting Xvfb..."
 Xvfb "${DISPLAY}" -listen tcp -nocursor -screen 0 ${WIDTH}x${HEIGHT}x24 &
 PID_XVFB=$!
@@ -92,6 +99,9 @@ duration=$(ffprobe -i /output/raw.mp4 -show_entries format=duration -v quiet -of
 trim=$(echo ${duration}-${TRIM_DURATION} | bc)
 ffmpeg -hide_banner -loglevel error -t $trim -i /output/raw.mp4 -c copy /output/output.mp4 2>&1 >>/output/ffmpeg.log
 echo " done!"
+
+echo "Listing /output"
+ls -al /output
 
 echo -n "Cleaning up processes..."
 kill $PID_LOGO $PID_XVFB 2>/dev/null
