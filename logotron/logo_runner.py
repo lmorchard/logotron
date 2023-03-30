@@ -18,7 +18,6 @@ class LogoRunner:
             network_mode="none",
             detach=True,
             auto_remove=True,
-            remove=True,
             volumes={
                 f'{self.base_path}/input': {'bind': '/input', 'mode': 'ro'},
                 f'{self.base_path}/output': {'bind': '/output', 'mode': 'rw'},

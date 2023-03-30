@@ -1,0 +1,9 @@
+repeat 2000 [
+  pu
+  home
+  seth random 361
+  setpencolor random 15
+  fd 40
+  pd
+  fd random 200
+]

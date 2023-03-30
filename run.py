@@ -18,17 +18,18 @@ LOGGER = logging.getLogger(__name__)
 
 
 def main():
-    base_paths = [
-        "/home/lmorchard/workspace/logotron/data/001",
-        "/home/lmorchard/workspace/logotron/data/002",
-        "/home/lmorchard/workspace/logotron/data/003",
-    ]
-    for base_path in base_paths:
-        runner = LogoRunner(base_path=base_path, config=config, logger=LOGGER)
-        runner.run()
+    # base_paths = [
+    #     "/home/lmorchard/workspace/logotron/examples/001",
+    #     "/home/lmorchard/workspace/logotron/examples/002",
+    #     "/home/lmorchard/workspace/logotron/examples/003",
+    # ]
+    # for base_path in base_paths:
+    #     runner = LogoRunner(base_path=base_path, config=config, logger=LOGGER)
+    #     runner.run()
 
-    #bot = Bot(config=config, logger=LOGGER)
+    bot = Bot(config=config, logger=LOGGER)
     # bot.run_streaming()
+    bot.poll_notifications()
 
 
 if __name__ == '__main__':
