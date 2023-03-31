@@ -1,5 +1,6 @@
 .env
 *.log
+*.log.*
 __pycache__
 output
 tmp
