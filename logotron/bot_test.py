@@ -20,7 +20,16 @@ def logger():
     return logging.getLogger("test")
 
 
-def test_extract_program_source_1(bot, logger):
+def test_clean_program_title(bot):
+    cases = [
+        ("hello world", "hello world"),
+        ("hey @paul check this out!", "hey paul check this out!"),
+    ]
+    for raw_title, expected in cases:
+        assert bot.sanitize_program_title(raw_title) == expected
+
+
+def test_extract_program_source_1(logger):
     content_html = """<p><span class="h-card"><a href="https://toot.lmorchard.com/@logotron" class="u-url mention">@<span>logotron</span></a></span> boop boop <a href="https://toot.lmorchard.com/tags/logo" class="mention hashtag" rel="tag">#<span>logo</span></a> to randomwalk<br />repeat 1000 [<br />setpencolor (random 1 15)<br />make &quot;r random 3<br />if :r = 0 [ fd 20 ]<br />if :r = 1 [ rt 90 fd 20 ]<br />if :r = 2 [ lt 90 fd 20 ]<br />wait 1<br />]<br />end<br />fullscreen<br />randomwalk<br />wait 120<br />bye</p>"""
     expected = """to randomwalk
 repeat 1000 [
@@ -43,7 +52,7 @@ bye"""
     assert expected == result
 
 
-def test_extract_program_source_2(bot, logger):
+def test_extract_program_source_2(logger):
     content_html = """<p><span class="h-card"><a href="https://toot.lmorchard.com/@logotron" class="u-url mention" rel="nofollow noopener noreferrer" target="_blank">@<span>logotron</span></a></span></p><p>random comment</p><p><a href="https://gts.decafbad.com/tags/logo" class="mention hashtag" rel="nofollow noopener noreferrer" target="_blank">#<span>logo</span></a></p><p>to randomwalk<br>repeat 1000 [<br>setpencolor (random 1 15)<br>make "r random 3<br>if :r = 0 [ fd 20 ]<br>if :r = 1 [ rt 90 fd 20 ]<br>if :r = 2 [ lt 90 fd 20 ]<br>wait 1<br>]<br>end</p><p>fullscreen<br>randomwalk</p><p>wait 120<br>bye</p>"""
     expected = """to randomwalk
 repeat 1000 [

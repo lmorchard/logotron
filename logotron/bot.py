@@ -27,117 +27,130 @@ class Bot:
             access_token=config.access_token,
             debug_requests=config.debug_requests,
         )
-        self.listener = StreamListener(bot=self, client=self.client)
 
     def run_streaming(self):
         self.logger.info("Listening to notifications stream...")
-        self.client.stream_user(listener=self.listener)
+        self.client.stream_user(
+            listener=BotStreamListener(bot=self, client=self.client))
 
     def poll_notifications(self):
-        notifications = self.client.notifications(
-            mentions_only=True
-        )
+        notifications = self.client.notifications(mentions_only=True)
         for notification in notifications:
-            try:
-                self.handle_notification(notification)
-                self.logger.debug(f"Dismissing notification {notification['id']}")
-                self.client.notifications_dismiss(notification["id"])
-            except:
-                e = sys.exc_info()[0]
-                self.logger.error(f"Failed to handle notification: {e}")
+            self.handle_notification(notification)
 
     def handle_notification(self, notification):
-        # Only handle mentions from notifications
-        type = notification["type"]
-        if type != "mention":
-            return
+        try:
+            # Only handle mentions from notifications
+            type = notification["type"]
+            if type != "mention":
+                return
 
-        # Don't respond to accounts marked as bots
-        account = notification["account"]
-        bot = account["bot"]
-        if bot:
-            return
+            # Don't respond to accounts marked as bots
+            account = notification["account"]
+            bot = account["bot"]
+            if bot:
+                return
 
-        status = notification["status"]
-        status_id = status["id"]
+            # Ignore mentions without a valid program title from content warning
+            status = notification["status"]
+            program_title = self.sanitize_program_title(status["spoiler_text"])
+            if program_title == "":
+                return
 
-        # Ignore mentions without s content warning
-        spoiler_text = status["spoiler_text"]
-        if spoiler_text == "":
-            return
-        
-        # Ignore non-public mentions
-        visibility = status["visibility"]
-        if visibility != "public":
-            return
+            # Ignore non-public mentions
+            visibility = status["visibility"]
+            if visibility != "public":
+                return
 
-        # Parse the status HTML for cleanup and source extraction
-        content_html = status["content"]
-        parser = ProgramSourceHTMLParser(logger=self.logger)
-        parser.feed(content_html)
-        if not parser.found_logo_hashtag:
-            return
-        
-        acct = account["acct"]
-        
-        program_source = parser.get_text()
-        if program_source == "":
+            # Parse the status HTML for cleanup and source extraction
+            content_html = status["content"]
+            parser = ProgramSourceHTMLParser(logger=self.logger)
+            parser.feed(content_html)
+            if not parser.found_logo_hashtag:
+                return
+
+            # Get ready to reply...
+            acct = account["acct"]
+            status_id = status["id"]
+
+            # Try to get the program source, give a warning if we come up empty
+            program_source = parser.get_text()
+            if program_source == "":
+                status_result = self.client.status_post(
+                    f"@{acct} 🐢 Sorry, I couldn't find a program in your toot! 😔",
+                    in_reply_to_id=status_id,
+                )
+                self.logger.debug(f"Posted status id={status_result['id']}")
+                return
+
+            self.logger.debug(
+                f"Handling notification id={id} acct={acct} title={program_title} program_source={program_source}")
+
+            # Finally, take a crack at running the program source
+            runner = LogoRunner(
+                id=status_id,
+                source=program_source,
+                config=self.config,
+                logger=self.logger
+            )
+            runner.run()
+
+            # TODO: check whether the program run was actually successful and produced a video
+
+            # Upload the video that should have been produced from the run
+            self.logger.debug(
+                f"Posting media from {runner.output_video_filename} with {program_source}")
+            media_result = self.client.media_post(
+                runner.output_video_filename,
+                "video/mp4",
+                synchronous=True,
+                description=program_source,
+                focus=(0, 0),
+            )
+
+            # Post a reply with the video result, once it's been uploaded
             status_result = self.client.status_post(
-                f"@{acct} Sorry, I couldn't find a program in your toot! 😔",
+                f"@{acct} 🐢 I ran your #logo program, ✨ {program_title} ✨! Here's what happened...",
                 in_reply_to_id=status_id,
+                media_ids=[media_result["id"]],
+                idempotency_key=None,
             )
             self.logger.debug(f"Posted status id={status_result['id']}")
-            return
 
-        self.logger.debug(
-            f"Notification id={id} acct={acct} content={program_source} spoiler={spoiler_text} raw={content_html}")
+            # Dismiss the notification so we don't handle it over again, next poll
+            self.logger.debug(f"Dismissing notification {notification['id']}")
+            self.client.notifications_dismiss(notification["id"])
 
-        runner = LogoRunner(
-            id=status_id,
-            source=program_source,
-            config=self.config,
-            logger=self.logger
-        )
-        runner.run()
+        except:
+            e = sys.exc_info()[0]
+            self.logger.error(f"Failed to handle notification: {e}")
+            # TODO: send an apology to the user?
 
-        self.logger.debug(
-            f"Posting media from {runner.output_video_filename} with {program_source}")
-        media_result = self.client.media_post(
-            runner.output_video_filename,
-            "video/mp4",
-            synchronous=True,
-            description=program_source,
-            focus=(0, 0),
-        )
-
-        status_result = self.client.status_post(
-            f"@{acct} I ran your #logo program, {spoiler_text}, and here's what happened!",
-            in_reply_to_id=status_id,
-            media_ids=[media_result["id"]],
-            idempotency_key=None,
-        )
-
-        self.logger.debug(f"Posted status id={status_result['id']}")
+    def sanitize_program_title(self, raw_title):
+        """
+        Strip undesirable characters from the content warning used as
+        program title, since it's repeated in the bot's reply.
+        """
+        # TODO: think this through a bit more
+        return re.sub(r'[^\w\s,.!]+', '', raw_title)
 
 
-class StreamListener(mastodon.streaming.StreamListener):
+class BotStreamListener(mastodon.streaming.StreamListener):
     def __init__(self, bot, client):
         self.bot = bot
         self.client = client
         self.logger = logging.getLogger("bot")
 
     def on_notification(self, notification):
-        try:
-            self.bot.handle_notification(notification)
-            self.logger.debug(f"Dismissing notification {notification['id']}")
-            self.client.notifications_dismiss(notification["id"])
-        except:
-            e = sys.exc_info()[0]
-            self.logger.error(f"Failed to handle notification: {e}")
-
+        self.bot.handle_notification(notification)
 
 
 class ProgramSourceHTMLParser(HTMLParser):
+    """
+    Quick & dirty parser to find and extract Logo program source expected
+    after a #logo hashtag in a toot formatted as HTML
+    """
+
     def __init__(self, logger):
         super().__init__()
         self.logger = logger
@@ -170,10 +183,8 @@ class ProgramSourceHTMLParser(HTMLParser):
     def handle_endtag(self, tag):
         if self.in_hashtag > 0:
             self.in_hashtag -= 1
-            if self.in_hashtag == 0:
-                if self.captured_hashtag == "#logo":
-                    self.capture_text = True
-                    self.found_logo_hashtag = True
-        elif tag == "p":
-            if self.capture_text:
-                self.text += "\n\n"
+            if self.in_hashtag == 0 and self.captured_hashtag == "#logo":
+                self.capture_text = True
+                self.found_logo_hashtag = True
+        elif tag == "p" and self.capture_text:
+            self.text += "\n\n"
