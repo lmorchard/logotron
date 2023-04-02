@@ -1,7 +1,7 @@
 import pytest
 import logging
 
-from .bot import Bot
+from .bot import Bot, ProgramSourceHTMLParser
 from .config import Config
 
 
@@ -36,7 +36,10 @@ fullscreen
 randomwalk
 wait 120
 bye"""
-    result = bot.extract_program_source(content_html)
+    parser = ProgramSourceHTMLParser(logger=logger)
+    parser.feed(content_html)
+    assert parser.found_logo_hashtag
+    result = parser.get_text()
     assert expected == result
 
 
@@ -58,5 +61,8 @@ randomwalk
 
 wait 120
 bye"""
-    result = bot.extract_program_source(content_html)
+    parser = ProgramSourceHTMLParser(logger=logger)
+    parser.feed(content_html)
+    assert parser.found_logo_hashtag
+    result = parser.get_text()
     assert expected == result

@@ -46,47 +46,48 @@ class Bot:
                 e = sys.exc_info()[0]
                 self.logger.error(f"Failed to handle notification: {e}")
 
-    def extract_program_source(self, content_html):
-        parser = ProgramSourceHTMLParser(logger=self.logger)
-        parser.feed(content_html)
-        return parser.get_text()
-
     def handle_notification(self, notification):
-        # self.logger.info(
-        #    f"NOTIFICATION RAW {pprint.PrettyPrinter(depth=4).pformat(notification)}")
-
+        # Only handle mentions from notifications
         type = notification["type"]
         if type != "mention":
             return
 
+        # Don't respond to accounts marked as bots
         account = notification["account"]
         bot = account["bot"]
         if bot:
             return
-        
-        acct = account["acct"]
 
         status = notification["status"]
         status_id = status["id"]
 
+        # Ignore mentions without s content warning
         spoiler_text = status["spoiler_text"]
         if spoiler_text == "":
             return
         
+        # Ignore non-public mentions
         visibility = status["visibility"]
         if visibility != "public":
             return
 
         # Parse the status HTML for cleanup and source extraction
         content_html = status["content"]
-        program_source = self.extract_program_source(content_html)
-
+        parser = ProgramSourceHTMLParser(logger=self.logger)
+        parser.feed(content_html)
+        if not parser.found_logo_hashtag:
+            return
+        
+        acct = account["acct"]
+        
+        program_source = parser.get_text()
         if program_source == "":
             status_result = self.client.status_post(
                 f"@{acct} Sorry, I couldn't find a program in your toot! 😔",
                 in_reply_to_id=status_id,
             )
             self.logger.debug(f"Posted status id={status_result['id']}")
+            return
 
         self.logger.debug(
             f"Notification id={id} acct={acct} content={program_source} spoiler={spoiler_text} raw={content_html}")
@@ -110,7 +111,7 @@ class Bot:
         )
 
         status_result = self.client.status_post(
-            f"@{acct} I ran your program, and here's what happened!",
+            f"@{acct} I ran your #logo program, {spoiler_text}, and here's what happened!",
             in_reply_to_id=status_id,
             media_ids=[media_result["id"]],
             idempotency_key=None,
@@ -126,7 +127,14 @@ class StreamListener(mastodon.streaming.StreamListener):
         self.logger = logging.getLogger("bot")
 
     def on_notification(self, notification):
-        self.bot.handle_notification(notification)
+        try:
+            self.bot.handle_notification(notification)
+            self.logger.debug(f"Dismissing notification {notification['id']}")
+            self.client.notifications_dismiss(notification["id"])
+        except:
+            e = sys.exc_info()[0]
+            self.logger.error(f"Failed to handle notification: {e}")
+
 
 
 class ProgramSourceHTMLParser(HTMLParser):
@@ -136,6 +144,7 @@ class ProgramSourceHTMLParser(HTMLParser):
         self.in_hashtag = 0
         self.captured_hashtag = ""
         self.capture_text = False
+        self.found_logo_hashtag = False
         self.text = ""
 
     def get_text(self):
@@ -164,6 +173,7 @@ class ProgramSourceHTMLParser(HTMLParser):
             if self.in_hashtag == 0:
                 if self.captured_hashtag == "#logo":
                     self.capture_text = True
+                    self.found_logo_hashtag = True
         elif tag == "p":
             if self.capture_text:
                 self.text += "\n\n"
