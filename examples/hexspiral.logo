@@ -1,0 +1,19 @@
+to hexspiral :size
+   make "n 1
+   make "turns 0
+   while [:n < :size] [
+      make "n :n + 5
+      make "turns turns + 1
+      if :turns > 5 [
+        make "turns 0
+        setpencolor (random 1 15)
+      ]
+      fd :n rt 60
+      wait 1
+   ]
+end
+
+clearscreen
+fullscreen
+setpensize 3
+hexspiral 500

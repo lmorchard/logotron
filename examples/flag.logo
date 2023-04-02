@@ -1,0 +1,11 @@
+to stripe
+  pd rt 90 fd 200 rt 90 fd 1 rt 90 fd 200 lt 90 pu fd 1 lt 180 wait 1
+end
+pu
+fullscreen
+setxy -100 100
+setpencolor 3 repeat 10 [ stripe ]
+setpencolor 12 repeat 10 [ stripe ]
+setpencolor 7 repeat 10 [ stripe ]
+setpencolor 12 repeat 10 [ stripe ]
+setpencolor 3 repeat 10 [ stripe ]

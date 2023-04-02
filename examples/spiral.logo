@@ -1,0 +1,18 @@
+to spiral :size
+   make "n 1
+   make "turns 0
+   while [:n < :size] [
+      make "n :n + 5
+      make "turns turns + 1
+      if :turns > 3 [
+        make "turns 0
+        setpencolor (random 1 15)
+      ]
+      fd :n rt 90
+   ]
+end
+
+clearscreen
+fullscreen
+setpensize 2
+spiral 2000
