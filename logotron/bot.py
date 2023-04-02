@@ -132,7 +132,7 @@ class Bot:
         program title, since it's repeated in the bot's reply.
         """
         # TODO: think this through a bit more
-        return re.sub(r'[^\w\s,.!]+', '', raw_title)
+        return re.sub(r'[^\w\s,.!\u263a-\U0001f645]+', '', raw_title)
 
 
 class BotStreamListener(mastodon.streaming.StreamListener):

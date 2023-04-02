@@ -23,7 +23,8 @@ def logger():
 def test_clean_program_title(bot):
     cases = [
         ("hello world", "hello world"),
-        ("hey @paul check this out!", "hey paul check this out!"),
+        ("hey @paul@example.com check this out!", "hey paulexample.com check this out!"),
+        ("💖 emoji 🐢 should 🙃 work", "💖 emoji 🐢 should 🙃 work"),
     ]
     for raw_title, expected in cases:
         assert bot.sanitize_program_title(raw_title) == expected
