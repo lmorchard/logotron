@@ -13,7 +13,7 @@ class Config:
     debug_requests: bool = False
     debug: bool = False
     log_level: str = "DEBUG"
-    log_filename: str = "bot.log"
+    log_filename: str = "log/bot.log"
     log_maxbytes: int = 100000
     log_backup_count: int = 10
     logo_runner_image: str = "lmorchard/ucblogo-runner"

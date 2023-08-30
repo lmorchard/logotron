@@ -1,12 +1,11 @@
-import os
 import os.path
 import logging
 import re
 import sys
 import mastodon.streaming
 from collections import defaultdict
-import pprint
 
+# TODO: add some concurrency to running programs?
 # from multiprocessing import Pool
 
 from .client import Client

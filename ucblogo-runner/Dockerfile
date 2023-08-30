@@ -21,6 +21,8 @@ RUN apt-get install -y \
 
 COPY entrypoint.sh /logo/
 
+# TODO: switch to non-root user!
+
 VOLUME [ "/input", "/output" ]
 
 ENTRYPOINT [ "/logo/entrypoint.sh" ]
