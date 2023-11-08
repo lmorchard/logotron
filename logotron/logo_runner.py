@@ -41,25 +41,30 @@ class LogoRunner:
         self.logger.debug(
             f"Launching container from {self.config.logo_runner_image}")
 
-        self.container = self.docker.containers.run(
-            name=f"logo-runner-{self.id}",
-            image=self.config.logo_runner_image,
-            mem_limit=self.config.logo_runner_mem_limit,
-            network_mode="none",
-            detach=True,
-            auto_remove=True,
-            volumes={
-                self.input_path: {'bind': '/input', 'mode': 'ro'},
-                self.output_path: {'bind': '/output', 'mode': 'rw'},
-            }
-            # env
-        )
-        self.logger.debug(f"Launched container {self.container.id}")
+        try:
+            self.container = self.docker.containers.run(
+                name=f"logo-runner-{self.id}",
+                image=self.config.logo_runner_image,
+                mem_limit=self.config.logo_runner_mem_limit,
+                network_mode="none",
+                detach=True,
+                auto_remove=True,
+                volumes={
+                    self.input_path: {'bind': '/input', 'mode': 'ro'},
+                    self.output_path: {'bind': '/output', 'mode': 'rw'},
+                }
+                # env
+            )
+            self.logger.debug(f"Launched container {self.container.id}")
 
-        container_logs = self.container.logs(
-            timestamps=True,
-            stream=True,
-            follow=True
-        )
-        for message in container_logs:
-            self.logger.info(f"log {message}")
+            container_logs = self.container.logs(
+                timestamps=True,
+                stream=True,
+                follow=True
+            )
+            for message in container_logs:
+                self.logger.info(f"log {message}")
+        except docker.errors.APIError as e:
+            e_msg = str(e)
+            self.logger.error(f"Failed to launch container {e_msg}")
+            

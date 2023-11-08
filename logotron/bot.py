@@ -42,23 +42,27 @@ class Bot:
             # Only handle mentions from notifications
             type = notification["type"]
             if type != "mention":
+                self.logger.debug(f"Notification ignored: not a mention")
                 return
 
             # Don't respond to accounts marked as bots
             account = notification["account"]
             bot = account["bot"]
             if bot:
+                self.logger.debug(f"Notification ignored: account is a bot")
                 return
 
             # Ignore mentions without a valid program title from content warning
             status = notification["status"]
             program_title = self.sanitize_program_title(status["spoiler_text"])
             if program_title == "":
+                self.logger.debug(f"Notification ignored: no program title")
                 return
 
             # Ignore non-public mentions
             visibility = status["visibility"]
             if visibility != "public":
+                self.logger.debug(f"Notification ignored: mention not public")
                 return
 
             # Parse the status HTML for cleanup and source extraction
@@ -66,6 +70,7 @@ class Bot:
             parser = ProgramSourceHTMLParser(logger=self.logger)
             parser.feed(content_html)
             if not parser.found_logo_hashtag:
+                self.logger.debug(f"Notification ignored: #logo hashtag not found")
                 return
 
             # Get ready to reply...
@@ -122,7 +127,8 @@ class Bot:
 
         except:
             e = sys.exc_info()[0]
-            self.logger.error(f"Failed to handle notification: {e}")
+            e_msg = str(e)
+            self.logger.error(f"Failed to handle notification: {e_msg}")
             # TODO: send an apology to the user?
 
     def sanitize_program_title(self, raw_title):
